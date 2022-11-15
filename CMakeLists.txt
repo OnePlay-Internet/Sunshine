@@ -402,6 +402,8 @@ set_source_files_properties(src/upnp.cpp PROPERTIES COMPILE_FLAGS -Wno-pedantic)
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/third-party
+  ${CMAKE_CURRENT_SOURCE_DIR}/third-party/AdaptiveStream/header
+  ${CMAKE_CURRENT_SOURCE_DIR}/third-party/AdaptiveStream/utils
   ${CMAKE_CURRENT_SOURCE_DIR}/third-party/cbs/include
   ${CMAKE_CURRENT_SOURCE_DIR}/third-party/moonlight-common-c/enet/include
   ${CMAKE_CURRENT_SOURCE_DIR}/third-party/moonlight-common-c/reedsolomon
@@ -410,6 +412,7 @@ include_directories(
 )
 
 add_subdirectory(third-party/cbs)
+add_subdirectory(third-party/AdaptiveStream)
 
 string(TOUPPER "x${CMAKE_BUILD_TYPE}" BUILD_TYPE)
 if("${BUILD_TYPE}" STREQUAL "XDEBUG")
@@ -448,6 +451,7 @@ list(APPEND SUNSHINE_EXTERNAL_LIBRARIES
 		${CMAKE_THREAD_LIBS_INIT}
 		enet
 		opus
+		ads
 		${FFMPEG_LIBRARIES}
 		${Boost_LIBRARIES}
 		${OPENSSL_LIBRARIES}

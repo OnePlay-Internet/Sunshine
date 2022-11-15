@@ -77,6 +77,7 @@ extern color_t colors[4];
 void capture(
   safe::mail_t mail,
   config_t config,
+  AdsContext* ads,
   void *channel_data);
 
 int init();

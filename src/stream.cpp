@@ -23,6 +23,8 @@ extern "C" {
 #include "thread_safe.h"
 #include "utility.h"
 
+#include <ads_context.h>
+
 #define IDX_START_A 0
 #define IDX_START_B 1
 #define IDX_INVALIDATE_REF_FRAMES 2
@@ -296,6 +298,12 @@ struct session_t {
   safe::signal_t controlEnd;
 
   std::atomic<session::state_e> state;
+
+  AdsEvent* shutdown_ads;
+  AdsQueue* capture_record;
+  AdsQueue* capture_event;
+  AdsQueue* sink_record;
+  AdsQueue* client_record;
 };
 
 /**
@@ -654,6 +662,17 @@ void controlBroadcastThread(control_server_t *server) {
     if(tagged_cipher_length >= 16 + sizeof(crypto::aes_t)) {
       std::copy(payload.end() - 16, payload.end(), std::begin(iv));
     }
+
+    // char first = plaintext[0];
+    // if(first == ("&")[0]) {
+    //   std::string str = std::string(plaintext);
+    //   str.find(",",1);
+
+    //   BUFFER_MALLOC(buf,sizeof(AdaptiveRecord),record_ptr);
+    //   AdaptiveRecord* record = (AdaptiveRecord*)record_ptr;
+    //   record->num_data = 0;
+    //   ADS_QUEUE_CLASS->push(session->buf);
+    // }
 
     input::print(plaintext.data());
     input::passthrough(session->input, std::move(plaintext));
@@ -1319,6 +1338,7 @@ void stop(session_t &session) {
   }
 
   session.shutdown_event->raise(true);
+  RAISE_EVENT(session.shutdown_ads);
 }
 
 void join(session_t &session) {
@@ -1403,6 +1423,31 @@ int start(session_t &session, const std::string &addr_string) {
   session.audioThread = std::thread { audioThread, &session };
   session.videoThread = std::thread { videoThread, &session };
 
+  // newAdaptiveControl(session->shutdown_ads,
+  //     session->client_record,
+  //     session->sink_record,
+  //     session->capture_event,
+  //     session->capture_record);
+  
+  // std::thread event_translator { [session](){
+  //     auto queue = mail::man->queue<AdaptiveEvent>(mail::capture_ads_event);
+  //     for(;;) {
+  //       if(IS_INVOKED(session->shutdown_ads)) {
+  //         break;
+  //       }
+
+  //       if(ADS_QUEUE_CLASS->peek(session->capture_event)){
+  //         AdsBuffer* buffer = NULL;
+  //         ADS_QUEUE_CLASS->pop(session->capture_event,&buffer,NULL,false);
+  //         (AdaptiveEvent*)ads_eve = (AdaptiveEvent*) BUFFER_REF(buffer,NULL);
+  //         queue->push(event);
+  //         BUFFER_UNREF(buffer);
+  //       }
+  //     }
+  //   }
+  // }
+  // event_translator.detach();
+
   session.state.store(state_e::RUNNING, std::memory_order_relaxed);
 
   return 0;
@@ -1422,6 +1467,12 @@ std::shared_ptr<session_t> alloc(config_t &config, crypto::aes_t &gcm_key, crypt
   session->control.cipher       = crypto::cipher::gcm_t {
     gcm_key, false
   };
+
+  session->client_record = ADS_QUEUE_CLASS->init(INFINITE);
+  session->sink_record = ADS_QUEUE_CLASS->init(INFINITE);
+  session->capture_event = ADS_QUEUE_CLASS->init(INFINITE);
+  session->capture_record = ADS_QUEUE_CLASS->init(INFINITE);
+  session->shutdown_ads = NEW_EVENT;
 
   session->video.idr_events = mail->event<bool>(mail::idr);
   session->video.lowseq     = 0;

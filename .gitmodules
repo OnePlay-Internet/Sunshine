@@ -16,3 +16,6 @@
 [submodule "third-party/TPCircularBuffer"]
 	path = third-party/TPCircularBuffer
 	url = https://github.com/michaeltyson/TPCircularBuffer
+[submodule "third-party/AdaptiveStream"]
+	path = third-party/AdaptiveStream
+	url = https://github.com/OnePlay-Internet/AdaptiveStream

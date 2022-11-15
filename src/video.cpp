@@ -23,6 +23,8 @@ extern "C" {
 }
 #endif
 
+#include <ads_context.h>
+
 using namespace std::literals;
 namespace video {
 
@@ -1266,6 +1268,12 @@ encode_e encode_run_sync(
           continue;
         }
 
+        int bitrate = pos->ctx->config.bitrate;
+        pos->session.ctx->rc_max_rate    = bitrate;
+        pos->session.ctx->rc_buffer_size = bitrate / 10;
+        pos->session.ctx->bit_rate       = bitrate;
+        pos->session.ctx->rc_min_rate    = bitrate;
+        
         if(encode(ctx->frame_nr++, pos->session, frame, ctx->packets, ctx->channel_data)) {
           BOOST_LOG(error) << "Could not encode video packet"sv;
           ctx->shutdown_event->raise(true);
@@ -1401,6 +1409,7 @@ void capture_async(
 void capture(
   safe::mail_t mail,
   config_t config,
+  AdsContext* ads,
   void *channel_data) {
 
   auto idr_events = mail->event<bool>(mail::idr);
