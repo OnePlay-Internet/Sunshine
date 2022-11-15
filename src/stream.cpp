@@ -592,6 +592,12 @@ int send_rumble(session_t *session, std::uint16_t id, std::uint16_t lowfreq, std
   return 0;
 }
 
+void
+handle_utf8_data(char* data){
+  data = data + (sizeof(int)/sizeof(char*));
+  printf("channel data :%s \n",data);
+}
+
 void controlBroadcastThread(control_server_t *server) {
   server->map(packetTypes[IDX_PERIODIC_PING], [](session_t *session, const std::string_view &payload) {
     BOOST_LOG(verbose) << "type [IDX_START_A]"sv;
@@ -674,8 +680,11 @@ void controlBroadcastThread(control_server_t *server) {
     //   ADS_QUEUE_CLASS->push(session->buf);
     // }
 
-    input::print(plaintext.data());
-    input::passthrough(session->input, std::move(plaintext));
+    bool is_hid = input::print(plaintext.data());
+    if(is_hid)
+      input::passthrough(session->input, std::move(plaintext));
+    else
+      handle_utf8_data((char*)plaintext.data());
   });
 
   server->map(packetTypes[IDX_ENCRYPTED], [server](session_t *session, const std::string_view &payload) {
@@ -1304,7 +1313,7 @@ void videoThread(session_t *session) {
   }
 
   BOOST_LOG(debug) << "Start capturing Video"sv;
-  video::capture(session->mail, session->config.monitor, session);
+  video::capture(session->mail, session->config.monitor, NULL ,session);
 }
 
 void audioThread(session_t *session) {

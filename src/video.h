@@ -11,6 +11,8 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+#include <ads_context.h>
+
 struct AVPacket;
 namespace video {
 

@@ -213,7 +213,7 @@ void print(PNV_MULTI_CONTROLLER_PACKET packet) {
 }
 
 constexpr int PACKET_TYPE_SCROLL_OR_KEYBOARD = PACKET_TYPE_SCROLL;
-void print(void *input) {
+bool print(void *input) {
   int input_type = util::endian::big(*(int *)input);
 
   switch(input_type) {
@@ -240,7 +240,10 @@ void print(void *input) {
   case PACKET_TYPE_MULTI_CONTROLLER:
     print((PNV_MULTI_CONTROLLER_PACKET)input);
     break;
+  default:
+    return false;
   }
+  return true;
 }
 
 void passthrough(std::shared_ptr<input_t> &input, PNV_REL_MOUSE_MOVE_PACKET packet) {
