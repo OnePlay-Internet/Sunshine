@@ -25,6 +25,8 @@
 #include "version.h"
 #include "video.h"
 
+#include <ads_context.h>
+
 #include "platform/common.h"
 extern "C" {
 #include <libavutil/log.h>
@@ -136,7 +138,41 @@ std::map<std::string_view, std::function<int(const char *name, int argc, char **
   { "version"sv, version::entry }
 };
 
+
+static void 
+callback1(AdsBuffer* buf)
+{
+    int* data = (int*)BUFFER_REF(buf,NULL);
+    if(*data)
+        printf("fired bandwidth %d\n",*data);
+    else
+        printf("fired bandwidth %d\n",*data);
+
+    BUFFER_UNREF(buf);
+}
+static void 
+callback2(AdsBuffer* buf)
+{
+    int* data = (int*)BUFFER_REF(buf,NULL);
+    if(*data)
+        printf("fired rtt %d\n",*data);
+    else
+        printf("fired rtt %d\n",*data);
+
+    BUFFER_UNREF(buf);
+}
+
+
 int main(int argc, char *argv[]) {
+  TIME_STOP;
+  AdsEvent* ads_shutdown         = NEW_EVENT;
+  mail::ads_context = new_adaptive_context(ads_shutdown, "print");
+  mail::ads_rtt_source = add_record_source(mail::ads_context,"rtt");
+  mail::ads_bandwidth_source = add_record_source(mail::ads_context,"bandwidth");
+
+  add_listener(mail::ads_context,"bandwidth",callback1);
+  add_listener(mail::ads_context,"rtt",callback2);
+
   util::TaskPool::task_id_t force_shutdown = nullptr;
 
   bool shutdown_by_interrupt = false;
