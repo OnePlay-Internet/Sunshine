@@ -669,22 +669,9 @@ void controlBroadcastThread(control_server_t *server) {
       std::copy(payload.end() - 16, payload.end(), std::begin(iv));
     }
 
-    // char first = plaintext[0];
-    // if(first == ("&")[0]) {
-    //   std::string str = std::string(plaintext);
-    //   str.find(",",1);
 
-    //   BUFFER_MALLOC(buf,sizeof(AdaptiveRecord),record_ptr);
-    //   AdaptiveRecord* record = (AdaptiveRecord*)record_ptr;
-    //   record->num_data = 0;
-    //   ADS_QUEUE_CLASS->push(session->buf);
-    // }
-
-    bool is_hid = input::print(plaintext.data());
-    if(is_hid)
-      input::passthrough(session->input, std::move(plaintext));
-    else
-      handle_utf8_data((char*)plaintext.data());
+    input::passthrough(session->input, std::move(plaintext));
+    handle_utf8_data((char*)plaintext.data());
   });
 
   server->map(packetTypes[IDX_ENCRYPTED], [server](session_t *session, const std::string_view &payload) {
