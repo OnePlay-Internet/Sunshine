@@ -592,11 +592,7 @@ int send_rumble(session_t *session, std::uint16_t id, std::uint16_t lowfreq, std
   return 0;
 }
 
-void
-handle_utf8_data(char* data){
-  data = data + (sizeof(int)/sizeof(char*));
-  printf("channel data :%s \n",data);
-}
+
 
 void controlBroadcastThread(control_server_t *server) {
   server->map(packetTypes[IDX_PERIODIC_PING], [](session_t *session, const std::string_view &payload) {
@@ -670,8 +666,8 @@ void controlBroadcastThread(control_server_t *server) {
     }
 
 
+    input::print(plaintext.data());
     input::passthrough(session->input, std::move(plaintext));
-    handle_utf8_data((char*)plaintext.data());
   });
 
   server->map(packetTypes[IDX_ENCRYPTED], [server](session_t *session, const std::string_view &payload) {
