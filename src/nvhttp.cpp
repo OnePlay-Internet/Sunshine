@@ -623,6 +623,29 @@ void applist(resp_https_t response, req_https_t request) {
   }
 }
 
+void client_report_metric(resp_http_t response,req_http_t  request) {
+  print_req<SimpleWeb::HTTP>(request);
+
+
+  std::string data = request->content.string();
+
+  pt::ptree tree;
+  auto g = util::fail_guard([&]() {
+    std::ostringstream data;
+
+    pt::write_xml(data, tree);
+    response->write(data.str());
+    response->close_connection_after_response = true;
+  });
+
+
+
+
+
+  auto &apps = tree.add_child("root", pt::ptree {});
+  apps.put("<xmlattr>.status_code", 200);
+}
+
 void launch(bool &host_audio, resp_https_t response, req_https_t request) {
   print_req<SimpleWeb::HTTPS>(request);
 
@@ -884,6 +907,7 @@ void start() {
   https_server.config.address       = "0.0.0.0"s;
   https_server.config.port          = port_https;
 
+  http_server.resource["^/report"]["POST"]       = client_report_metric;
   http_server.default_resource                   = not_found<SimpleWeb::HTTP>;
   http_server.resource["^/serverinfo$"]["GET"]   = serverinfo<SimpleWeb::HTTP>;
   http_server.resource["^/pair$"]["GET"]         = [&add_cert](auto resp, auto req) { pair<SimpleWeb::HTTP>(add_cert, resp, req); };
